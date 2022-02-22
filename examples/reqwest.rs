@@ -23,7 +23,6 @@ fn print_result(query: Query<&JSONOutput, Added<JSONOutput>>) {
     if let Ok(result) = query.get_single() {
         let text = result.0.as_ref().expect("failed to load");
         info!(message = "found result", %text);
-        panic!("hey");
     }
 }
 

@@ -74,12 +74,31 @@ fn poll_system(
 
 pub struct ExecutorPlugin;
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+enum ExecutorPhase {
+    Wake,
+    Poll,
+}
+
+impl SystemLabel for ExecutorPhase {
+    fn dyn_clone(&self) -> Box<dyn SystemLabel> {
+        Box::new(self.clone())
+    }
+}
+
 impl Plugin for ExecutorPlugin {
     fn build(&self, app: &mut App) {
+        let poll_set = SystemSet::new()
+            .label(ExecutorPhase::Poll)
+            .before(ExecutorPhase::Wake)
+            .with_system(poll_system);
+        let wake_set = SystemSet::new()
+            .label(ExecutorPhase::Wake)
+            .with_system(wake_system);
         let (sender, receiver) = unbounded();
         let executor = Executor { sender, receiver };
         app.insert_resource(executor)
-            .add_system(wake_system)
-            .add_system(poll_system);
+            .add_system_set(wake_set)
+            .add_system_set(poll_set);
     }
 }
