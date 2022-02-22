@@ -1,5 +1,5 @@
 use async_compat::Compat;
-use bevy::{log::LogPlugin, prelude::*};
+use bevy::{app::AppExit, log::LogPlugin, prelude::*};
 use bevy_duty::{task, ExecutorPlugin, Output};
 use reqwest::Error;
 
@@ -19,10 +19,11 @@ fn startup(mut commands: Commands) {
 
 type JSONOutput = Output<Result<String, Error>>;
 
-fn print_result(query: Query<&JSONOutput, Added<JSONOutput>>) {
+fn print_result(query: Query<&JSONOutput, Added<JSONOutput>>, mut writer: EventWriter<AppExit>) {
     if let Ok(result) = query.get_single() {
         let text = result.0.as_ref().expect("failed to load");
         info!(message = "found result", %text);
+        writer.send(AppExit);
     }
 }
 
